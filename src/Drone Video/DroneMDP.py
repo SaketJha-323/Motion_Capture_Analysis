@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load the video file
-video_path = 'data/video/Drone1.mp4'
+video_path = 'data/video/Drone2.mp4'
 cap = cv2.VideoCapture(video_path)
 
 # Check if video opened successfully
