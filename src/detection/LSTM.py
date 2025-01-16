@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from keras._tf_keras.keras.models import Sequential
+from keras._tf_keras.keras.layers import LSTM, Dense
 from mpl_toolkits.mplot3d import Axes3D
 
 # Load the calibrated drone data
@@ -38,16 +38,10 @@ az = calculate_acceleration(vz, times)
 
 # Ensure consistent sizes
 min_length = min(len(vx), len(vy), len(vz), len(ax), len(ay), len(az))
-motion_data = np.vstack((
-    vx[:min_length],
-    vy[:min_length],
-    vz[:min_length],
-    ax[:min_length],
-    ay[:min_length],
-    az[:min_length]
-)).T
+motion_data = np.vstack((vx[:min_length], vy[:min_length], vz[:min_length], ax[:min_length], ay[:min_length], az[:min_length])).T
+trajectory_data = np.vstack((x[:min_length], y[:min_length], z[:min_length])).T  # Original trajectory
 
-# Normalize the data
+# Normalize the motion data
 scaler = MinMaxScaler()
 motion_data_scaled = scaler.fit_transform(motion_data)
 
@@ -96,6 +90,7 @@ threshold = np.percentile(reconstruction_error, 95)
 
 # Identify anomalies
 anomalies = reconstruction_error > threshold
+anomaly_indices = np.where(anomalies)[0]
 
 # Visualization of reconstruction error
 plt.figure(figsize=(12, 6))
@@ -105,18 +100,24 @@ plt.title('Reconstruction Error and Anomaly Threshold')
 plt.legend()
 plt.show()
 
-# Text-based output
-anomaly_indices = np.where(anomalies)[0]
-print("Anomalies detected at indices:", anomaly_indices)
-
-# Visualize anomalies in 3D space
+# Visualize anomalies in the 3D trajectory
 fig = plt.figure(figsize=(12, 8))
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(motion_data[:len(reconstruction_error), 0], motion_data[:len(reconstruction_error), 1], motion_data[:len(reconstruction_error), 2], c='blue', label='Normal Data')
-ax.scatter(motion_data[anomaly_indices, 0], motion_data[anomaly_indices, 1], motion_data[anomaly_indices, 2], c='red', label='Anomalies')
-ax.set_title('Anomalies in Motion Data (Velocity in 3D Space)')
-ax.set_xlabel('Vx')
-ax.set_ylabel('Vy')
-ax.set_zlabel('Vz')
+
+# Plot the full trajectory
+ax.plot(trajectory_data[:, 0], trajectory_data[:, 1], trajectory_data[:, 2], c='blue', label='Normal Trajectory')
+
+# Highlight anomalies
+for idx in anomaly_indices:
+    ax.scatter(trajectory_data[idx, 0], trajectory_data[idx, 1], trajectory_data[idx, 2], c='red', s=50, label='Anomaly')
+
+# Set labels and title
+ax.set_title('Drone Trajectory with Anomalies')
+ax.set_xlabel('X (meters)')
+ax.set_ylabel('Y (meters)')
+ax.set_zlabel('Z (meters)')
 ax.legend()
 plt.show()
+
+# Text-based output
+print("Anomalies detected at indices:", anomaly_indices)
