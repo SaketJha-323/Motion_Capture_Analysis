@@ -8,6 +8,7 @@ from keras._tf_keras.keras.models import Sequential
 from keras._tf_keras.keras.layers import LSTM, Dense, Dropout, RepeatVector, TimeDistributed
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Load and preprocess data
 def load_data(file_path):
@@ -87,18 +88,107 @@ def combine_anomaly_scores(scores_if, scores_svm, scores_lstm, weights=[1, 1, 1]
     # Combine scores using weights
     combined_scores = (weights[0] * scores_if) + (weights[1] * scores_svm) + (weights[2] * scores_lstm)
     return combined_scores
-
-# Visualization
-def visualize_anomalies(data, scores, threshold, title='Anomaly Detection'):
+def analyze_anomalies(data, scores, threshold):
+    """
+    Analyze anomalies and provide detailed explanations
+    """
     anomalies = np.where(scores > threshold)[0]
-    plt.figure(figsize=(12, 6))
-    plt.plot(data, label='Data')
-    plt.scatter(anomalies, data[anomalies], color='red', label='Anomalies')
-    plt.title(title)
+    anomaly_scores = scores[anomalies]
+    
+    # Create a detailed analysis
+    analysis = []
+    for idx, score in zip(anomalies, anomaly_scores):
+        severity = "High" if score > np.percentile(scores, 98) else "Medium"
+        
+        # Determine local context
+        start_idx = max(0, idx - 5)
+        end_idx = min(len(data), idx + 5)
+        local_mean = np.mean(data[start_idx:end_idx])
+        local_std = np.std(data[start_idx:end_idx])
+        
+        # Analyze why it's an anomaly
+        value = data[idx]
+        if value > local_mean + 2*local_std:
+            reason = "Unusually high value compared to surrounding data"
+        elif value < local_mean - 2*local_std:
+            reason = "Unusually low value compared to surrounding data"
+        else:
+            reason = "Irregular pattern detected in the sequence"
+            
+        analysis.append({
+            'index': idx,
+            'value': value,
+            'severity': severity,
+            'score': score,
+            'reason': reason
+        })
+    
+    return pd.DataFrame(analysis)
+
+def enhanced_visualization(data, scores, threshold, analysis_df):
+    """
+    Create multiple visualizations for better understanding
+    """
+    fig = plt.figure(figsize=(20, 15))
+    
+    # Plot 1: Time Series with Anomalies
+    plt.subplot(3, 1, 1)
+    plt.plot(data, label='Normal Data', color='blue', alpha=0.5)
+    
+    # Color-code anomalies by severity
+    high_severity = analysis_df[analysis_df['severity'] == 'High']
+    medium_severity = analysis_df[analysis_df['severity'] == 'Medium']
+    
+    plt.scatter(high_severity['index'], data[high_severity['index'].values],
+                color='red', label='High Severity Anomalies', s=100)
+    plt.scatter(medium_severity['index'], data[medium_severity['index'].values],
+                color='orange', label='Medium Severity Anomalies', s=100)
+    
+    plt.title('Time Series Data with Detected Anomalies', fontsize=12)
     plt.legend()
+    
+    # Plot 2: Anomaly Scores Distribution
+    plt.subplot(3, 1, 2)
+    sns.histplot(scores, bins=50, color='blue', alpha=0.5)
+    plt.axvline(threshold, color='red', linestyle='--', label='Anomaly Threshold')
+    plt.title('Distribution of Anomaly Scores', fontsize=12)
+    plt.legend()
+    
+    # Plot 3: Local Context View
+    plt.subplot(3, 1, 3)
+    for idx in analysis_df['index'][:3]:  # Show first 3 anomalies for clarity
+        start_idx = max(0, idx - 10)
+        end_idx = min(len(data), idx + 10)
+        
+        plt.plot(range(start_idx, end_idx), data[start_idx:end_idx], 
+                label=f'Context around anomaly at {idx}')
+        plt.scatter(idx, data[idx], color='red', s=100)
+    
+    plt.title('Local Context Around Selected Anomalies', fontsize=12)
+    plt.legend()
+    
+    plt.tight_layout()
     plt.show()
 
-# Main pipeline
+def print_anomaly_report(analysis_df):
+    """
+    Print a human-readable report of the anomalies
+    """
+    print("\n=== ANOMALY DETECTION REPORT ===")
+    print(f"Total Anomalies Found: {len(analysis_df)}")
+    print("\nDetailed Breakdown:")
+    print("-" * 80)
+    
+    for severity in ['High', 'Medium']:
+        severity_group = analysis_df[analysis_df['severity'] == severity]
+        print(f"\n{severity} Severity Anomalies ({len(severity_group)} found):")
+        
+        for _, row in severity_group.iterrows():
+            print(f"\nTime Index: {row['index']}")
+            print(f"Value: {row['value']:.3f}")
+            print(f"Reason: {row['reason']}")
+            print("-" * 40)
+
 def main(file_path):
     # Load and preprocess data
     raw_data = load_data(file_path)
@@ -109,18 +199,21 @@ def main(file_path):
     scores_svm = train_one_class_svm(scaled_data)
     scores_lstm = train_lstm_autoencoder(scaled_data, n_steps=10)
 
-    # Normalize scores for combining
+    # Normalize and combine scores
     scores_if = (scores_if - scores_if.min()) / (scores_if.max() - scores_if.min())
     scores_svm = (scores_svm - scores_svm.min()) / (scores_svm.max() - scores_svm.min())
     scores_lstm = (scores_lstm - scores_lstm.min()) / (scores_lstm.max() - scores_lstm.min())
-
-    # Combine scores
     combined_scores = combine_anomaly_scores(scores_if, scores_svm, scores_lstm)
 
-    # Set threshold and visualize
-    threshold = np.percentile(combined_scores, 95)  # Top 5% as anomalies
-    visualize_anomalies(scaled_data[:, 0], combined_scores, threshold)
+    # Analyze anomalies
+    threshold = np.percentile(combined_scores, 95)
+    analysis_df = analyze_anomalies(scaled_data[:, 0], combined_scores, threshold)
+    
+    # Generate visualizations and report
+    enhanced_visualization(scaled_data[:, 0], combined_scores, threshold, analysis_df)
+    print_anomaly_report(analysis_df)
 
 # Execute main pipeline
-file_path = 'data/raw/Drone_CoD.csv'
-main(file_path)
+if __name__ == "__main__":
+    file_path = 'data/raw/Drone_CoD.csv'
+    main(file_path)
