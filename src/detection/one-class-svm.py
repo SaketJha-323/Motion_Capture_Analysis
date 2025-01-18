@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.svm import OneClassSVM
 from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 # Load the calibrated drone data
@@ -49,7 +50,7 @@ scaler = StandardScaler()
 motion_data_scaled = scaler.fit_transform(motion_data)
 
 # Apply One-Class SVM for anomaly detection
-one_class_svm = OneClassSVM(kernel='rbf', gamma='auto', nu=0.05)
+one_class_svm = OneClassSVM(kernel='rbf', gamma='auto', nu=0.3)
 anomaly_scores = one_class_svm.fit_predict(motion_data_scaled)
 
 # Find indices of anomalies
@@ -60,6 +61,64 @@ dimensions = ['X', 'Y', 'Z']
 velocities = [vx, vy, vz]
 accelerations = [ax, ay, az]
 colors = ['blue', 'green', 'purple']
+
+
+# Combine velocities for all axes into a single array
+velocity_data = np.vstack((vx, vy, vz)).T  # Shape: (n_samples, 3)
+
+# Apply KMeans clustering on the combined velocity data
+kmeans_vel = KMeans(n_clusters=1, random_state=42)
+vel_clusters = kmeans_vel.fit_predict(velocity_data)
+
+# Visualize the results in a single plot
+plt.figure(figsize=(18, 6))
+
+# Plot combined velocity clusters
+plt.scatter(range(len(velocity_data)), velocity_data[:, 0], c=vel_clusters, cmap='viridis', alpha=0.7, label='X Velocity')
+plt.scatter(range(len(velocity_data)), velocity_data[:, 1], c=vel_clusters, cmap='plasma', alpha=0.7, label='Y Velocity')
+plt.scatter(range(len(velocity_data)), velocity_data[:, 2], c=vel_clusters, cmap='inferno', alpha=0.7, label='Z Velocity')
+
+# Mark anomalies
+plt.scatter(anomaly_indices, velocity_data[anomaly_indices, 0], color='red', label='Anomalies (X)', edgecolor='black')
+plt.scatter(anomaly_indices, velocity_data[anomaly_indices, 1], color='red', label='Anomalies (Y)', edgecolor='black')
+plt.scatter(anomaly_indices, velocity_data[anomaly_indices, 2], color='red', label='Anomalies (Z)', edgecolor='black')
+
+plt.title('Combined Velocity Clusters (X, Y, Z)')
+plt.xlabel('Time Steps')
+plt.ylabel('Velocity (m/s)')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Combine accelerations for all axes into a single array
+acceleration_data = np.vstack((ax, ay, az)).T  # Shape: (n_samples, 3)
+
+# Apply KMeans clustering on the combined acceleration data
+kmeans_acc = KMeans(n_clusters=1, random_state=42)
+acc_clusters = kmeans_acc.fit_predict(acceleration_data)
+
+# Visualize the results in a single plot
+plt.figure(figsize=(18, 6))
+
+# Plot combined acceleration clusters
+plt.scatter(range(len(acceleration_data)), acceleration_data[:, 0], c=acc_clusters, cmap='viridis', alpha=0.7, label='X Acceleration')
+plt.scatter(range(len(acceleration_data)), acceleration_data[:, 1], c=acc_clusters, cmap='plasma', alpha=0.7, label='Y Acceleration')
+plt.scatter(range(len(acceleration_data)), acceleration_data[:, 2], c=acc_clusters, cmap='inferno', alpha=0.7, label='Z Acceleration')
+
+# Mark anomalies
+plt.scatter(anomaly_indices[:-1], acceleration_data[anomaly_indices[:-1], 0], color='red', label='Anomalies (X)', edgecolor='black')
+plt.scatter(anomaly_indices[:-1], acceleration_data[anomaly_indices[:-1], 1], color='red', label='Anomalies (Y)', edgecolor='black')
+plt.scatter(anomaly_indices[:-1], acceleration_data[anomaly_indices[:-1], 2], color='red', label='Anomalies (Z)', edgecolor='black')
+
+plt.title('Combined Acceleration Clusters (X, Y, Z)')
+plt.xlabel('Time Steps')
+plt.ylabel('Acceleration (m/s²)')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
 
 for i, (dim, vel, acc, color) in enumerate(zip(dimensions, velocities, accelerations, colors)):
     plt.figure(figsize=(15, 12))
