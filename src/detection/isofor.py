@@ -50,7 +50,7 @@ scaler = StandardScaler()
 motion_data_scaled = scaler.fit_transform(motion_data)
 
 # Apply Isolation Forest for anomaly detection
-isolation_forest = IsolationForest(n_estimators=100, contamination=0.3, random_state=42)
+isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.3, random_state=42)
 anomaly_scores = isolation_forest.fit_predict(motion_data_scaled)
 
 # Find indices of anomalies
@@ -119,11 +119,174 @@ plt.tight_layout()
 plt.show()
 
 
+# Visualize the results
+plt.figure(figsize=(12, 8))
+
+# X, Y and Z as a functino of frames
+plt.figure(figsize=(12, 8))
+plt.plot(x[:-2], label='X Position')
+plt.scatter(anomaly_indices, x[anomaly_indices], color='red', label='Anomalies')
+plt.legend()
+plt.title('Position with Anomalies (X)')
+
+plt.figure(figsize=(12, 8))
+plt.plot(y[:-2], label='Y Position')
+plt.scatter(anomaly_indices, y[anomaly_indices], color='red', label='Anomalies')
+plt.legend()
+plt.title('Position with Anomalies (Y)')
+
+plt.figure(figsize=(12, 8))
+plt.plot(z[:-2], label='Z Position')
+plt.scatter(anomaly_indices, z[anomaly_indices], color='red', label='Anomalies')
+plt.legend()
+plt.title('Position with Anomalies (Z)')
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+# Adjust layout
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+plt.show()
+
+# 3D Visualization of Anomalies in Motion Data
+from mpl_toolkits.mplot3d import Axes3D
+
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+# Normal points
+normal_indices = np.where(anomaly_scores == 1)[0]
+ax.scatter(motion_data[normal_indices, 0], motion_data[normal_indices, 1], motion_data[normal_indices, 2],
+           c='blue', label='Normal', alpha=0.6)
+
+# Anomaly points
+ax.scatter(motion_data[anomaly_indices, 0], motion_data[anomaly_indices, 1], motion_data[anomaly_indices, 2],
+           c='red', label='Anomalies', alpha=0.9)
+
+# Labels and legend
+ax.set_title('3D Visualization of Anomalies', fontsize=14)
+ax.set_xlabel('X (m/s)')
+ax.set_ylabel('Y (m/s)')
+ax.set_zlabel('Z (m/s)')
+ax.legend()
+
+plt.show()
+
+
+
+
+
+# Create a figure for plotting X Velocity and X Acceleration
+plt.figure(figsize=(15, 8))
+
+# Plot X velocity
+plt.subplot(2, 1, 1)
+plt.plot(vx, label='X Velocity', color='blue')
+plt.scatter(anomaly_indices, vx[anomaly_indices], color='red', label='Anomalies (X)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Velocity (m/s)')
+plt.title('X Velocity with Anomalies')
+plt.grid(True)
+
+# Plot X acceleration
+plt.subplot(2, 1, 2)
+plt.plot(ax, label='X Acceleration', color='green')
+plt.scatter(anomaly_indices[:-1], ax[anomaly_indices[:-1]], color='red', label='Anomalies (X)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Acceleration (m/s²)')
+plt.title('X Acceleration with Anomalies')
+plt.grid(True)
+
+# Show the plot
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+# Create a figure for plotting velocities
+plt.figure(figsize=(15, 8))
+
+# Plot velocities for each dimension (X, Y, Z) in separate subplots
+plt.subplot(3, 1, 1)  # 3 rows, 1 column, first subplot
+plt.plot(vx, label='X Velocity', color='blue')
+plt.scatter(anomaly_indices, vx[anomaly_indices], color='red', label='Anomalies (X)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Velocity (m/s)')
+plt.title('X Velocity with Anomalies')
+plt.grid(True)
+
+plt.subplot(3, 1, 2)  # 3 rows, 1 column, second subplot
+plt.plot(vy, label='Y Velocity', color='green')
+plt.scatter(anomaly_indices, vy[anomaly_indices], color='red', label='Anomalies (Y)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Velocity (m/s)')
+plt.title('Y Velocity with Anomalies')
+plt.grid(True)
+
+plt.subplot(3, 1, 3)  # 3 rows, 1 column, third subplot
+plt.plot(vz, label='Z Velocity', color='orange')
+plt.scatter(anomaly_indices, vz[anomaly_indices], color='red', label='Anomalies (Z)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Velocity (m/s)')
+plt.title('Z Velocity with Anomalies')
+plt.grid(True)
+
+# Adjust layout
+plt.tight_layout()
+plt.show()
+
+# Create a figure for plotting accelerations
+plt.figure(figsize=(15, 8))
+
+# Plot accelerations for each dimension (X, Y, Z) in separate subplots
+plt.subplot(3, 1, 1)  # 3 rows, 1 column, first subplot
+plt.plot(ax, label='X Acceleration', color='blue')
+plt.scatter(anomaly_indices[:-1], ax[anomaly_indices[:-1]], color='red', label='Anomalies (X)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Acceleration (m/s²)')
+plt.title('X Acceleration with Anomalies')
+plt.grid(True)
+
+plt.subplot(3, 1, 2)  # 3 rows, 1 column, second subplot
+plt.plot(ay, label='Y Acceleration', color='green')
+plt.scatter(anomaly_indices[:-1], ay[anomaly_indices[:-1]], color='red', label='Anomalies (Y)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Acceleration (m/s²)')
+plt.title('Y Acceleration with Anomalies')
+plt.grid(True)
+
+plt.subplot(3, 1, 3)  # 3 rows, 1 column, third subplot
+plt.plot(az, label='Z Acceleration', color='orange')
+plt.scatter(anomaly_indices[:-1], az[anomaly_indices[:-1]], color='red', label='Anomalies (Z)', edgecolor='black')
+plt.legend()
+plt.xlabel('Time Steps')
+plt.ylabel('Acceleration (m/s²)')
+plt.title('Z Acceleration with Anomalies')
+plt.grid(True)
+
+# Adjust layout
+plt.tight_layout()
+plt.show()
+
+
+
 for i, (dim, vel, acc, color) in enumerate(zip(dimensions, velocities, accelerations, colors)):
-    plt.figure(figsize=(20, 15))
+    plt.figure(figsize=(15, 12))
     
     # Plot velocity
-    plt.subplot(3, 1, 1)
     plt.plot(vel, label=f'{dim} Velocity', color=color)
     plt.scatter(anomaly_indices, vel[anomaly_indices], color='red', label='Anomalies')
     plt.xlabel('Time Steps')
@@ -133,27 +296,12 @@ for i, (dim, vel, acc, color) in enumerate(zip(dimensions, velocities, accelerat
     plt.grid(True)
     
     # Plot acceleration
-    plt.subplot(3, 1, 2)
+    plt.subplot(2, 1, 2)
     plt.plot(acc, label=f'{dim} Acceleration', color=color)
     plt.scatter(anomaly_indices[:-1], acc[anomaly_indices[:-1]], color='red', label='Anomalies')
     plt.xlabel('Time Steps')
     plt.ylabel('Acceleration (m/s²)')
     plt.title(f'{dim}-Axis Acceleration with Anomalies')
-    plt.legend()
-    plt.grid(True)
-    
-    # Superimposed normalized plot
-    plt.subplot(3, 1, 3)
-    vel_norm = (vel - np.mean(vel)) / np.std(vel)
-    acc_norm = (acc - np.mean(acc)) / np.std(acc)
-    
-    plt.plot(vel_norm, label=f'Normalized {dim} Velocity', color=color, alpha=0.7)
-    plt.plot(acc_norm, label=f'Normalized {dim} Acceleration', color='darkgray', alpha=0.7)
-    plt.scatter(anomaly_indices, vel_norm[anomaly_indices], color='red', marker='o', label='Velocity Anomalies')
-    plt.scatter(anomaly_indices[:-1], acc_norm[anomaly_indices[:-1]], color='darkred', marker='s', label='Acceleration Anomalies')
-    plt.xlabel('Time Steps')
-    plt.ylabel('Normalized Value')
-    plt.title(f'Superimposed Normalized {dim}-Axis Velocity and Acceleration')
     plt.legend()
     plt.grid(True)
     
@@ -208,5 +356,3 @@ for dim, vel, acc in zip(dimensions, velocities, accelerations):
 
 # Print detected anomalies
 print("Anomalies detected at indices:", anomaly_indices)
-
-
