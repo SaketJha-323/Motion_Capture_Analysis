@@ -91,7 +91,16 @@ test_reconstruction_error = np.mean(np.power(X_test - X_test_pred, 2), axis=1)
 # Calculate mean and standard deviation of training reconstruction errors
 mean_train_error = np.mean(train_reconstruction_error)
 std_train_error = np.std(train_reconstruction_error)
-threshold = mean_train_error + 2 * std_train_error  # Dynamic threshold
+
+# Example 1: Using a different multiplier
+threshold = mean_train_error + 1.5 * std_train_error
+
+# Example 2: Using a fixed threshold
+threshold = 0.1
+
+# Example 3: Using a percentile
+threshold = np.percentile(train_reconstruction_error, 95)
+  # Dynamic threshold
 
 # Identify anomalies in the test data
 anomalies = test_reconstruction_error > threshold

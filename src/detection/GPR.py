@@ -60,9 +60,9 @@ error_y = np.abs(pred_y - vy)
 error_z = np.abs(pred_z - vz)
 
 # Define anomaly threshold (e.g., 95th percentile of error)
-threshold_x = np.percentile(error_x, 95)
-threshold_y = np.percentile(error_y, 95)
-threshold_z = np.percentile(error_z, 95)
+threshold_x = np.percentile(error_x, 90)
+threshold_y = np.percentile(error_y, 90)
+threshold_z = np.percentile(error_z, 90)
 
 # Identify anomalies
 anomalies_x = error_x > threshold_x

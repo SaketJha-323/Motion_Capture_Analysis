@@ -86,7 +86,7 @@ reconstructed = model.predict(test_data)
 reconstruction_error = np.mean((test_targets - reconstructed) ** 2, axis=1)
 
 # Define anomaly threshold
-threshold = np.percentile(reconstruction_error, 95)
+threshold = np.percentile(reconstruction_error, 90)
 
 # Identify anomalies
 anomalies = reconstruction_error > threshold
