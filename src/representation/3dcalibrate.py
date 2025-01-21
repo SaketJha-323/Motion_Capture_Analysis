@@ -3,7 +3,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 
 # Load the data
-file_path = 'data/raw/Drone_CoD.csv'
+file_path = 'data/processed/updated_drone_data.csv'
 drone_movement_data = pd.read_csv(file_path)
 
 # Room dimensions (in inches)
