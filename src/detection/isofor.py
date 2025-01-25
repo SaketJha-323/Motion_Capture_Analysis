@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
 
 # Load the calibrated drone data
@@ -19,16 +20,16 @@ x = drone_data['X'].values / 1000  # Convert from mm to meters
 y = drone_data['Y'].values / 1000
 z = drone_data['Z'].values / 1000
 
-# Function to calculate a moving average
-def moving_average(data, window_size):
-    return np.convolve(data, np.ones(window_size) / window_size, mode='valid')
+# # Function to calculate a moving average
+# def moving_average(data, window_size):
+#     return np.convolve(data, np.ones(window_size) / window_size, mode='valid')
 
-# Apply moving average with a window size of 10
-window_size = 10
-x_avg = moving_average(x, window_size)
-y_avg = moving_average(y, window_size)
-z_avg = moving_average(z, window_size)
-times_avg = moving_average(times, window_size)  # Average times for alignment
+# # Apply moving average with a window size of 10
+# window_size = 10
+# x_avg = moving_average(x, window_size)
+# y_avg = moving_average(y, window_size)
+# z_avg = moving_average(z, window_size)
+# times_avg = moving_average(times, window_size)  # Average times for alignment
 
 # Functions to calculate velocity and acceleration
 def calculate_velocity(position, time):
@@ -37,22 +38,36 @@ def calculate_velocity(position, time):
 def calculate_acceleration(velocity, time):
     return np.diff(velocity) / np.diff(time[1:])
 
-# Calculate velocities and accelerations using the averaged data
-vx = calculate_velocity(x_avg, times_avg)
-vy = calculate_velocity(y_avg, times_avg)
-vz = calculate_velocity(z_avg, times_avg)
+# # Calculate velocities and accelerations using the averaged data
+# vx = calculate_velocity(x_avg, times_avg)
+# vy = calculate_velocity(y_avg, times_avg)
+# vz = calculate_velocity(z_avg, times_avg)
 
-ax = calculate_acceleration(vx, times_avg)
-ay = calculate_acceleration(vy, times_avg)
-az = calculate_acceleration(vz, times_avg)
+# ax = calculate_acceleration(vx, times_avg)
+# ay = calculate_acceleration(vy, times_avg)
+# az = calculate_acceleration(vz, times_avg)
+
+
+# Calculate velocities and accelerations using the averaged data
+vx = calculate_velocity(x, times)
+vy = calculate_velocity(y, times)
+vz = calculate_velocity(z, times)
+
+ax = calculate_acceleration(vx, times)
+ay = calculate_acceleration(vy, times)
+az = calculate_acceleration(vz, times)
+
 
 # Trim all arrays to the same size
 min_length = min(len(vx), len(vy), len(vz), len(ax), len(ay), len(az))
 vx, vy, vz = vx[:min_length], vy[:min_length], vz[:min_length]
 ax, ay, az = ax[:min_length], ay[:min_length], az[:min_length]
 
+# # Trim the times array to match the length of the velocity data
+# times_trimmed = times_avg[1:len(vx) + 1]  # Ensure times aligns with velocity data length
+
 # Trim the times array to match the length of the velocity data
-times_trimmed = times_avg[1:len(vx) + 1]  # Ensure times aligns with velocity data length
+times_trimmed = times[1:len(vx) + 1]  # Ensure times aligns with velocity data length
 
 # Combine motion data for anomaly detection
 motion_data = np.vstack((vx, vy, vz, ax, ay, az)).T
@@ -94,8 +109,6 @@ plot_with_anomalies(acceleration_data, anomaly_indices[:-1],
                     [('X Acceleration', 'blue'), ('Y Acceleration', 'green'), ('Z Acceleration', 'purple')], 
                     'Accelerations with Anomalies', 'Acceleration (m/s²)', times_trimmed)
 
-
-import seaborn as sns
 
 # Set the Seaborn style for better aesthetics
 sns.set_theme(style="whitegrid", palette="muted")
@@ -174,6 +187,26 @@ plt.tight_layout()
 plt.show()
 
 
+# Rename acceleration arrays to avoid conflict with plotting axis
+ax_accel, ay_accel, az_accel = ax, ay, az
+
+# 3D Plot of the trajectory with anomalies
+fig = plt.figure(figsize=(12, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+# Plot trajectory with anomalies highlighted
+ax.plot(x, y, z, c='blue', label='Trajectory', alpha=0.6)
+
+# Add labels and legend
+ax.set_title('3D Trajectory with Anomaly Detection', fontsize=16)
+ax.set_xlabel('X Position (m)', fontsize=12)
+ax.set_ylabel('Y Position (m)', fontsize=12)
+ax.set_zlabel('Z Position (m)', fontsize=12)
+ax.legend()
+
+plt.show()
+
+
 # 3D Visualization of Anomalies
 fig = plt.figure(figsize=(10, 8))
 ax_3d = fig.add_subplot(111, projection='3d')
@@ -205,7 +238,6 @@ for dim, vel, acc in zip(dimensions, [vx, vy, vz], [ax, ay, az]):
 
 # Print detected anomalies
 print("\nAnomalies detected at indices:", anomaly_indices)
-
 
 
 
