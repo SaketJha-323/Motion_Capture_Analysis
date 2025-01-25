@@ -21,9 +21,9 @@ avg_space_resolution = pd.Series({
 
 # Room dimensions in meters
 room_dimensions = {
-    'X (m)': 255 * 0.0254,  # Convert inches to meters (1 inch = 0.0254 meters)
-    'Y (m)': 200 * 0.0254,  # Convert inches to meters
-    'Z (m)': 90 * 0.0254    # Convert inches to meters
+    'X (m)': 255 * 0.0254,  # Convert inches to meters (1 inch = 0.0254 meters) 6.477
+    'Y (m)': 200 * 0.0254,  # Convert inches to meters 5.08
+    'Z (m)': 90 * 0.0254    # Convert inches to meters 2.286
 }
 
 # Calculate scaling factors based on room dimensions and average space resolution
