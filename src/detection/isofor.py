@@ -10,15 +10,33 @@ from mpl_toolkits.mplot3d import Axes3D
 file_path = 'data/processed/updated_drone_data2.csv'
 drone_data = pd.read_csv(file_path)
 
-# Ensure the columns are named correctly
-drone_data.columns = ['Frame', 'Time', 'X', 'Y', 'Z']
+# # Ensure the columns are named correctly
+# drone_data.columns = ['Frame', 'Time', 'X', 'Y', 'Z']
 
-# Convert data to numpy array for easier manipulation
-frames = drone_data['Frame'].values
-times = drone_data['Time'].values
-x = drone_data['X'].values / 1000  # Convert from mm to meters
-y = drone_data['Y'].values / 1000
-z = drone_data['Z'].values / 1000
+#convert position into meters
+drone_data['X'] /= 1000
+drone_data['Y'] /= 1000
+drone_data['Z'] /= 1000
+
+#calculate time differences
+time_diff = np.gradient(drone_data['Time'])
+
+#calculate velocity from position
+drone_data['vx'] = np.gradient(drone_data['X'], drone_data['Time'])
+drone_data['vy'] = np.gradient(drone_data['Y'], drone_data['Time'])
+drone_data['vz'] = np.gradient(drone_data['Z'], drone_data['Time'])
+
+#calculate acceleration from velocity
+drone_data['ax'] = np.gradient(drone_data['vx'], drone_data['Time'])
+drone_data['ay'] = np.gradient(drone_data['vy'], drone_data['Time'])
+drone_data['az'] = np.gradient(drone_data['vz'], drone_data['Time'])
+
+# # Convert data to numpy array for easier manipulation
+# frames = drone_data['Frame'].values
+# times = drone_data['Time'].values
+# x = drone_data['X'].values / 1000  # Convert from mm to meters
+# y = drone_data['Y'].values / 1000
+# z = drone_data['Z'].values / 1000
 
 # # Function to calculate a moving average
 # def moving_average(data, window_size):
@@ -31,12 +49,12 @@ z = drone_data['Z'].values / 1000
 # z_avg = moving_average(z, window_size)
 # times_avg = moving_average(times, window_size)  # Average times for alignment
 
-# Functions to calculate velocity and acceleration
-def calculate_velocity(position, time):
-    return np.diff(position) / np.diff(time)
+# # Functions to calculate velocity and acceleration
+# def calculate_velocity(position):
+#     return np.diff(position) / dt
 
-def calculate_acceleration(velocity, time):
-    return np.diff(velocity) / np.diff(time[1:])
+# def calculate_acceleration(velocity):
+#     return np.diff(velocity) / dt
 
 # # Calculate velocities and accelerations using the averaged data
 # vx = calculate_velocity(x_avg, times_avg)
@@ -48,37 +66,48 @@ def calculate_acceleration(velocity, time):
 # az = calculate_acceleration(vz, times_avg)
 
 
-# Calculate velocities and accelerations using the averaged data
-vx = calculate_velocity(x, times)
-vy = calculate_velocity(y, times)
-vz = calculate_velocity(z, times)
+# # Calculate velocities and accelerations using the averaged data
+# vx = calculate_velocity(x)
+# vy = calculate_velocity(y)
+# vz = calculate_velocity(z)
 
-ax = calculate_acceleration(vx, times)
-ay = calculate_acceleration(vy, times)
-az = calculate_acceleration(vz, times)
+# ax = calculate_acceleration(vx)
+# ay = calculate_acceleration(vy)
+# az = calculate_acceleration(vz)
+
+# dt = 0.00333
+# vx = np.diff(x) / dt
+# vy = np.diff(y) / dt
+# vz = np.diff(z) / dt
+
+# ax = np.diff(vx) / dt
+# ay = np.diff(vy) / dt
+# az = np.diff(vz) / dt
 
 
 # Trim all arrays to the same size
-min_length = min(len(vx), len(vy), len(vz), len(ax), len(ay), len(az))
-vx, vy, vz = vx[:min_length], vy[:min_length], vz[:min_length]
-ax, ay, az = ax[:min_length], ay[:min_length], az[:min_length]
+# min_length = min(len(vx), len(vy), len(vz), len(ax), len(ay), len(az))
+# vx, vy, vz = vx[:min_length], vy[:min_length], vz[:min_length]
+# ax, ay, az = ax[:min_length], ay[:min_length], az[:min_length]
 
 # # Trim the times array to match the length of the velocity data
 # times_trimmed = times_avg[1:len(vx) + 1]  # Ensure times aligns with velocity data length
 
 # Trim the times array to match the length of the velocity data
-times_trimmed = times[1:len(vx) + 1]  # Ensure times aligns with velocity data length
+# times_trimmed = times[1:len(vx) + 1]  # Ensure times aligns with velocity data length
 
 # Combine motion data for anomaly detection
-motion_data = np.vstack((vx, vy, vz, ax, ay, az)).T
+# motion_data = np.vstack((vx, vy, vz, ax, ay, az)).T
+motion_data = drone_data[['vx','vy','vz','ax','ay','az']].T
 
-# Normalize data using StandardScaler
-scaler = StandardScaler()
-motion_data_scaled = scaler.fit_transform(motion_data)
+# # Normalize data using StandardScaler
+# scaler = StandardScaler()
+# motion_data_scaled = scaler.fit_transform(motion_data)
 
 # Apply Isolation Forest for anomaly detection
 isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.1, random_state=42)
-anomaly_scores = isolation_forest.fit_predict(motion_data_scaled)
+# anomaly_scores = isolation_forest.fit_predict(motion_data_scaled)
+anomaly_scores = isolation_forest.fit_predict(motion_data)
 
 # Identify anomaly indices
 anomaly_indices = np.where(anomaly_scores == -1)[0]
@@ -117,34 +146,46 @@ anomaly_indices = np.where(anomaly_scores == -1)[0]
 plt.figure(figsize=(15, 12))
 
 # Subplot for X velocity
-plt.subplot(3, 1, 1)
-plt.plot(vx, label='X Velocity', color='blue', alpha=0.8)
-plt.scatter(anomaly_indices, vx[anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.subplot(2, 1, 1)
+plt.plot(drone_data['vx'], label='X Velocity', color='blue', alpha=0.8)
+plt.scatter(anomaly_indices, drone_data['vx'][anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
 plt.title('X Velocity with Anomalies')
 plt.xlabel('Time Steps')
 plt.ylabel('Velocity (m/s)')
 plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
 
-# Subplot for Y velocity
-plt.subplot(3, 1, 2)
-plt.plot(vy, label='Y Velocity', color='green', alpha=0.8)
-plt.scatter(anomaly_indices, vy[anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
-plt.title('Y Velocity with Anomalies')
+
+# Subplot for X acceleration
+plt.subplot(2, 1, 2)
+plt.plot(drone_data['ax'], label='X Acceleration', color='green', alpha=0.8)
+plt.scatter(anomaly_indices[:-1], drone_data['ax'][anomaly_indices[:-1]], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.title('X Acceleration with Anomalies')
 plt.xlabel('Time Steps')
-plt.ylabel('Velocity (m/s)')
+plt.ylabel('Acceleration (m/s²)')
 plt.legend()
 plt.grid(True, linestyle='--', alpha=0.7)
 
-# Subplot for Z velocity
-plt.subplot(3, 1, 3)
-plt.plot(vz, label='Z Velocity', color='purple', alpha=0.8)
-plt.scatter(anomaly_indices, vz[anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
-plt.title('Z Velocity with Anomalies')
-plt.xlabel('Time Steps')
-plt.ylabel('Velocity (m/s)')
-plt.legend()
-plt.grid(True, linestyle='--', alpha=0.7)
+
+# # Subplot for Y velocity
+# plt.subplot(3, 1, 2)
+# plt.plot(vy, label='Y Velocity', color='green', alpha=0.8)
+# plt.scatter(anomaly_indices, vy[anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
+# plt.title('Y Velocity with Anomalies')
+# plt.xlabel('Time Steps')
+# plt.ylabel('Velocity (m/s)')
+# plt.legend()
+# plt.grid(True, linestyle='--', alpha=0.7)
+
+# # Subplot for Z velocity
+# plt.subplot(3, 1, 3)
+# plt.plot(vz, label='Z Velocity', color='purple', alpha=0.8)
+# plt.scatter(anomaly_indices, vz[anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
+# plt.title('Z Velocity with Anomalies')
+# plt.xlabel('Time Steps')
+# plt.ylabel('Velocity (m/s)')
+# plt.legend()
+# plt.grid(True, linestyle='--', alpha=0.7)
 
 # Adjust layout
 plt.subplots_adjust(hspace=0.5)
