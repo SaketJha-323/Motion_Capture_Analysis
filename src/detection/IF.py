@@ -1,3 +1,5 @@
+from turtle import color
+from matplotlib import colors
 from matplotlib.pylab import normal
 import pandas as pd
 import numpy as np
@@ -147,7 +149,7 @@ def plot_isolation_forest(features, x_label, y_label, title):
     decision_function = isolation_forest.decision_function(grid_points).reshape(xx.shape)
 
     # Plotting
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(14, 7))
     plt.scatter(inliers[features[0]], inliers[features[1]], c='blue', label='Inliers', s=20)
     plt.scatter(outliers[features[0]], outliers[features[1]], c='red', label='Outliers', s=20)
     plt.contour(xx, yy, decision_function, levels=[0], linewidths=2, colors='black')
@@ -156,6 +158,7 @@ def plot_isolation_forest(features, x_label, y_label, title):
     plt.title(title)
     plt.legend()
     plt.show()
+
 
 # Plot for velocity (vx and vy)
 plot_isolation_forest(
