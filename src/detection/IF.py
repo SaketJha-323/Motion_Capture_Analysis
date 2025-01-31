@@ -30,15 +30,15 @@ drone_data['az'] = np.gradient(drone_data['vz'], drone_data['Time'])
 # Combine motion data for anomaly detection
 motion_data = drone_data[['vx', 'vy', 'vz', 'ax', 'ay', 'az']]
 
-# Apply Isolation Forest for anomaly detection
-isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.3, random_state=42)
-anomaly_scores = isolation_forest.fit_predict(motion_data)
+# # Apply Isolation Forest for anomaly detection
+# isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.01, random_state=42)
+# anomaly_scores = isolation_forest.fit_predict(motion_data)
 
-# Identify anomaly indices
-anomaly_indices = np.where(anomaly_scores == -1)[0]
+# # Identify anomaly indices
+# anomaly_indices = np.where(anomaly_scores == -1)[0]
 
-# Identify normal data points
-normal_indices = np.where(anomaly_scores == 1)[0]
+# # Identify normal data points
+# normal_indices = np.where(anomaly_scores == 1)[0]
 
 # #for X Axis
 # # Plot velocity (X, Y, Z) with anomalies
@@ -125,10 +125,60 @@ normal_indices = np.where(anomaly_scores == 1)[0]
 
 
 
-# # velocity and accelration scatter plot
-# def plot_isolation_forest(features, x_label, y_label, title):
+# velocity and accelration scatter plot
+def plot_isolation_forest(features, x_label, y_label, title):
+    # Prepare data for Isolation Forest
+    feature_data = drone_data[features]
+    
+    # Train Isolation Forest
+    isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.03, random_state=42)
+    isolation_forest.fit(feature_data)
+    anomaly_scores = isolation_forest.predict(feature_data)
+
+    # Separate inliers and outliers
+    inliers = feature_data[anomaly_scores == 1]
+    outliers = feature_data[anomaly_scores == -1]
+
+    # Create meshgrid for decision boundary
+    x_range = np.linspace(feature_data[features[0]].min(), feature_data[features[0]].max(), 100)
+    y_range = np.linspace(feature_data[features[1]].min(), feature_data[features[1]].max(), 100)
+    xx, yy = np.meshgrid(x_range, y_range)
+    grid_points = np.c_[xx.ravel(), yy.ravel()]
+    decision_function = isolation_forest.decision_function(grid_points).reshape(xx.shape)
+
+    # Plotting
+    plt.figure(figsize=(8, 6))
+    plt.scatter(inliers[features[0]], inliers[features[1]], c='blue', label='Inliers', s=20)
+    plt.scatter(outliers[features[0]], outliers[features[1]], c='red', label='Outliers', s=20)
+    plt.contour(xx, yy, decision_function, levels=[0], linewidths=2, colors='black')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.legend()
+    plt.show()
+
+# Plot for velocity (vx and vy)
+plot_isolation_forest(
+    features=['vx', 'vy'],
+    x_label='Vx (m/s)',
+    y_label='Vy (m/s)',
+    title='Isolation Forest for Velocity (Vx, Vy)'
+)
+
+# Plot for acceleration (ax and ay)
+plot_isolation_forest(
+    features=['ax', 'ay'],
+    x_label='Ax (m/s²)',
+    y_label='Ay (m/s²)',
+    title='Isolation Forest for Acceleration (Ax, Ay)'
+)
+
+
+
+# # velocity and accelration vs time scatter plot
+# def plot_anomaly_detection(feature, x_label, title):
 #     # Prepare data for Isolation Forest
-#     feature_data = drone_data[features]
+#     feature_data = drone_data[[feature]]
     
 #     # Train Isolation Forest
 #     isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.1, random_state=42)
@@ -139,91 +189,41 @@ normal_indices = np.where(anomaly_scores == 1)[0]
 #     inliers = feature_data[anomaly_scores == 1]
 #     outliers = feature_data[anomaly_scores == -1]
 
-#     # Create meshgrid for decision boundary
-#     x_range = np.linspace(feature_data[features[0]].min(), feature_data[features[0]].max(), 100)
-#     y_range = np.linspace(feature_data[features[1]].min(), feature_data[features[1]].max(), 100)
-#     xx, yy = np.meshgrid(x_range, y_range)
-#     grid_points = np.c_[xx.ravel(), yy.ravel()]
-#     decision_function = isolation_forest.decision_function(grid_points).reshape(xx.shape)
-
 #     # Plotting
 #     plt.figure(figsize=(8, 6))
-#     plt.scatter(inliers[features[0]], inliers[features[1]], c='blue', label='Inliers', s=20)
-#     plt.scatter(outliers[features[0]], outliers[features[1]], c='red', label='Outliers', s=20)
-#     plt.contour(xx, yy, decision_function, levels=[0], linewidths=2, colors='black')
-#     plt.xlabel(x_label)
-#     plt.ylabel(y_label)
+#     plt.scatter(inliers.index, inliers[feature], c='blue', label='Inliers', s=20)
+#     plt.scatter(outliers.index, outliers[feature], c='red', label='Outliers', s=20)
+#     plt.axhline(0, color='black', linewidth=1, linestyle='--', alpha=0.7)
+#     plt.xlabel('Time Index')
+#     plt.ylabel(x_label)
 #     plt.title(title)
 #     plt.legend()
 #     plt.show()
 
-# # Plot for velocity (vx and vy)
-# plot_isolation_forest(
-#     features=['vx', 'vy'],
+# # Graph 1: X-axis velocity
+# plot_anomaly_detection(
+#     feature='vx',
 #     x_label='vx (m/s)',
-#     y_label='vy (m/s)',
-#     title='Isolation Forest for Velocity (vx, vy)'
+#     title='Isolation Forest for X-axis Velocity (vx)'
 # )
 
-# # Plot for acceleration (ax and ay)
-# plot_isolation_forest(
-#     features=['ax', 'ay'],
+# # Graph 2: Y-axis velocity
+# plot_anomaly_detection(
+#     feature='vy',
+#     x_label='vy (m/s)',
+#     title='Isolation Forest for Y-axis Velocity (vy)'
+# )
+
+# # Graph 3: X-axis acceleration
+# plot_anomaly_detection(
+#     feature='ax',
 #     x_label='ax (m/s²)',
-#     y_label='ay (m/s²)',
-#     title='Isolation Forest for Acceleration (ax, ay)'
+#     title='Isolation Forest for X-axis Acceleration (ax)'
 # )
 
-
-
-# velocity and accelration vs time scatter plot
-def plot_anomaly_detection(feature, x_label, title):
-    # Prepare data for Isolation Forest
-    feature_data = drone_data[[feature]]
-    
-    # Train Isolation Forest
-    isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.1, random_state=42)
-    isolation_forest.fit(feature_data)
-    anomaly_scores = isolation_forest.predict(feature_data)
-
-    # Separate inliers and outliers
-    inliers = feature_data[anomaly_scores == 1]
-    outliers = feature_data[anomaly_scores == -1]
-
-    # Plotting
-    plt.figure(figsize=(8, 6))
-    plt.scatter(inliers.index, inliers[feature], c='blue', label='Inliers', s=20)
-    plt.scatter(outliers.index, outliers[feature], c='red', label='Outliers', s=20)
-    plt.axhline(0, color='black', linewidth=1, linestyle='--', alpha=0.7)
-    plt.xlabel('Time Index')
-    plt.ylabel(x_label)
-    plt.title(title)
-    plt.legend()
-    plt.show()
-
-# Graph 1: X-axis velocity
-plot_anomaly_detection(
-    feature='vx',
-    x_label='vx (m/s)',
-    title='Isolation Forest for X-axis Velocity (vx)'
-)
-
-# Graph 2: Y-axis velocity
-plot_anomaly_detection(
-    feature='vy',
-    x_label='vy (m/s)',
-    title='Isolation Forest for Y-axis Velocity (vy)'
-)
-
-# Graph 3: X-axis acceleration
-plot_anomaly_detection(
-    feature='ax',
-    x_label='ax (m/s²)',
-    title='Isolation Forest for X-axis Acceleration (ax)'
-)
-
-# Graph 4: Y-axis acceleration
-plot_anomaly_detection(
-    feature='ay',
-    x_label='ay (m/s²)',
-    title='Isolation Forest for Y-axis Acceleration (ay)'
-)
+# # Graph 4: Y-axis acceleration
+# plot_anomaly_detection(
+#     feature='ay',
+#     x_label='ay (m/s²)',
+#     title='Isolation Forest for Y-axis Acceleration (ay)'
+# )
