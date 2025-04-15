@@ -1,3 +1,4 @@
+from enum import auto
 from turtle import color
 from matplotlib import colors
 from matplotlib.pylab import normal
@@ -32,98 +33,98 @@ drone_data['az'] = np.gradient(drone_data['vz'], drone_data['Time'])
 # Combine motion data for anomaly detection
 motion_data = drone_data[['vx', 'vy', 'vz', 'ax', 'ay', 'az']]
 
-# # Apply Isolation Forest for anomaly detection
-# isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.01, random_state=42)
-# anomaly_scores = isolation_forest.fit_predict(motion_data)
+# Apply Isolation Forest for anomaly detection
+isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination="auto", random_state=42)
+anomaly_scores = isolation_forest.fit_predict(motion_data)
 
-# # Identify anomaly indices
-# anomaly_indices = np.where(anomaly_scores == -1)[0]
+# Identify anomaly indices
+anomaly_indices = np.where(anomaly_scores == -1)[0]
 
-# # Identify normal data points
-# normal_indices = np.where(anomaly_scores == 1)[0]
+# Identify normal data points
+normal_indices = np.where(anomaly_scores == 1)[0]
 
-# #for X Axis
-# # Plot velocity (X, Y, Z) with anomalies
-# plt.figure(figsize=(15, 12))
+#for X Axis
+# Plot velocity (X, Y, Z) with anomalies
+plt.figure(figsize=(15, 12))
 
-# # Subplot for X velocity
-# plt.subplot(2, 1, 1)
-# plt.plot(drone_data['Time'], drone_data['vx'], label='X Velocity', color='blue', alpha=0.8)
-# plt.scatter(drone_data['Time'][anomaly_indices], drone_data['vx'][anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
-# plt.title('X-Axis Velocity with Anomalies vs Time (S)')
-# plt.ylabel('Velocity (m/s)')
-# plt.legend()
-# plt.grid(True, linestyle='--', alpha=0.7)
+# Subplot for X velocity
+plt.subplot(2, 1, 1)
+plt.plot(drone_data['Time'], drone_data['vx'], label='X Velocity', color='blue', alpha=0.8)
+plt.scatter(drone_data['Time'][anomaly_indices], drone_data['vx'][anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.title('X-Axis Velocity with Anomalies vs Time (S)')
+plt.ylabel('Velocity (m/s)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
 
-# # Subplot for X acceleration
-# plt.subplot(2, 1, 2)
-# plt.plot(drone_data['Time'], drone_data['ax'], label='X Acceleration', color='green', alpha=0.8)
-# plt.scatter(drone_data['Time'][anomaly_indices[:-1]], drone_data['ax'][anomaly_indices[:-1]], color='red', label='Anomalies', edgecolor='black', s=50)
-# plt.title('X-Axis Acceleration with Anomalies vs Time (S)')
-# plt.ylabel('Acceleration (m/s²)')
-# plt.legend()
-# plt.grid(True, linestyle='--', alpha=0.7)
+# Subplot for X acceleration
+plt.subplot(2, 1, 2)
+plt.plot(drone_data['Time'], drone_data['ax'], label='X Acceleration', color='green', alpha=0.8)
+plt.scatter(drone_data['Time'][anomaly_indices[:-1]], drone_data['ax'][anomaly_indices[:-1]], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.title('X-Axis Acceleration with Anomalies vs Time (S)')
+plt.ylabel('Acceleration (m/s²)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
 
-# # Adjust layout
-# plt.subplots_adjust(hspace=0.5)
-# plt.tight_layout()
-# plt.show()
-
-
-# #for Y Axis
-# # Plot velocity (X, Y, Z) with anomalies
-# plt.figure(figsize=(15, 12))
-
-# # Subplot for Y velocity
-# plt.subplot(2, 1, 1)
-# plt.plot(drone_data['Time'], drone_data['vy'], label='X Velocity', color='blue', alpha=0.8)
-# plt.scatter(drone_data['Time'][anomaly_indices], drone_data['vy'][anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
-# plt.title('Y-Axis Velocity with Anomalies vs Time (S)')
-# plt.ylabel('Velocity (m/s)')
-# plt.legend()
-# plt.grid(True, linestyle='--', alpha=0.7)
-
-# # Subplot for Y acceleration
-# plt.subplot(2, 1, 2)
-# plt.plot(drone_data['Time'], drone_data['ay'], label='X Acceleration', color='green', alpha=0.8)
-# plt.scatter(drone_data['Time'][anomaly_indices[:-1]], drone_data['ay'][anomaly_indices[:-1]], color='red', label='Anomalies', edgecolor='black', s=50)
-# plt.title('Y-AXis Acceleration with Anomalies vs Time (S)')
-# plt.ylabel('Acceleration (m/s²)')
-# plt.legend()
-# plt.grid(True, linestyle='--', alpha=0.7)
-
-# # Adjust layout
-# plt.subplots_adjust(hspace=1)
-# plt.tight_layout()
-# plt.show()
+# Adjust layout
+plt.subplots_adjust(hspace=0.5)
+plt.tight_layout()
+plt.show()
 
 
-# #for Z Axis
-# # Plot velocity (X, Y, Z) with anomalies
-# plt.figure(figsize=(15, 12))
+#for Y Axis
+# Plot velocity (X, Y, Z) with anomalies
+plt.figure(figsize=(15, 12))
 
-# # Subplot for Z velocity
-# plt.subplot(2, 1, 1)
-# plt.plot(drone_data['Time'], drone_data['vz'], label='X Velocity', color='blue', alpha=0.8)
-# plt.scatter(drone_data['Time'][anomaly_indices], drone_data['vz'][anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
-# plt.title('Z-Axis Velocity with Anomalies vs Time (S)')
-# plt.ylabel('Velocity (m/s)')
-# plt.legend()
-# plt.grid(True, linestyle='--', alpha=0.7)
+# Subplot for Y velocity
+plt.subplot(2, 1, 1)
+plt.plot(drone_data['Time'], drone_data['vy'], label='X Velocity', color='blue', alpha=0.8)
+plt.scatter(drone_data['Time'][anomaly_indices], drone_data['vy'][anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.title('Y-Axis Velocity with Anomalies vs Time (S)')
+plt.ylabel('Velocity (m/s)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
 
-# # Subplot for Z acceleration
-# plt.subplot(2, 1, 2)
-# plt.plot(drone_data['Time'], drone_data['az'], label='X Acceleration', color='green', alpha=0.8)
-# plt.scatter(drone_data['Time'][anomaly_indices[:-1]], drone_data['az'][anomaly_indices[:-1]], color='red', label='Anomalies', edgecolor='black', s=50)
-# plt.title('Z-Axis Acceleration with Anomalies vs Time (S)')
-# plt.ylabel('Acceleration (m/s²)')
-# plt.legend()
-# plt.grid(True, linestyle='--', alpha=0.7)
+# Subplot for Y acceleration
+plt.subplot(2, 1, 2)
+plt.plot(drone_data['Time'], drone_data['ay'], label='X Acceleration', color='green', alpha=0.8)
+plt.scatter(drone_data['Time'][anomaly_indices[:-1]], drone_data['ay'][anomaly_indices[:-1]], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.title('Y-AXis Acceleration with Anomalies vs Time (S)')
+plt.ylabel('Acceleration (m/s²)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
 
-# # Adjust layout
-# plt.subplots_adjust(hspace=0.5)
-# plt.tight_layout()
-# plt.show()
+# Adjust layout
+plt.subplots_adjust(hspace=1)
+plt.tight_layout()
+plt.show()
+
+
+#for Z Axis
+# Plot velocity (X, Y, Z) with anomalies
+plt.figure(figsize=(15, 12))
+
+# Subplot for Z velocity
+plt.subplot(2, 1, 1)
+plt.plot(drone_data['Time'], drone_data['vz'], label='X Velocity', color='blue', alpha=0.8)
+plt.scatter(drone_data['Time'][anomaly_indices], drone_data['vz'][anomaly_indices], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.title('Z-Axis Velocity with Anomalies vs Time (S)')
+plt.ylabel('Velocity (m/s)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Subplot for Z acceleration
+plt.subplot(2, 1, 2)
+plt.plot(drone_data['Time'], drone_data['az'], label='X Acceleration', color='green', alpha=0.8)
+plt.scatter(drone_data['Time'][anomaly_indices[:-1]], drone_data['az'][anomaly_indices[:-1]], color='red', label='Anomalies', edgecolor='black', s=50)
+plt.title('Z-Axis Acceleration with Anomalies vs Time (S)')
+plt.ylabel('Acceleration (m/s²)')
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Adjust layout
+plt.subplots_adjust(hspace=0.5)
+plt.tight_layout()
+plt.show()
 
 
 
@@ -133,7 +134,7 @@ def plot_isolation_forest(features, x_label, y_label, title):
     feature_data = drone_data[features]
     
     # Train Isolation Forest
-    isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.03, random_state=42)
+    isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=auto, random_state=42)
     isolation_forest.fit(feature_data)
     anomaly_scores = isolation_forest.predict(feature_data)
 
@@ -178,55 +179,55 @@ plot_isolation_forest(
 
 
 
-# # velocity and accelration vs time scatter plot
-# def plot_anomaly_detection(feature, x_label, title):
-#     # Prepare data for Isolation Forest
-#     feature_data = drone_data[[feature]]
+# velocity and accelration vs time scatter plot
+def plot_anomaly_detection(feature, x_label, title):
+    # Prepare data for Isolation Forest
+    feature_data = drone_data[[feature]]
     
-#     # Train Isolation Forest
-#     isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.1, random_state=42)
-#     isolation_forest.fit(feature_data)
-#     anomaly_scores = isolation_forest.predict(feature_data)
+    # Train Isolation Forest
+    isolation_forest = IsolationForest(n_estimators=300, max_samples=1.0, contamination=0.1, random_state=42)
+    isolation_forest.fit(feature_data)
+    anomaly_scores = isolation_forest.predict(feature_data)
 
-#     # Separate inliers and outliers
-#     inliers = feature_data[anomaly_scores == 1]
-#     outliers = feature_data[anomaly_scores == -1]
+    # Separate inliers and outliers
+    inliers = feature_data[anomaly_scores == 1]
+    outliers = feature_data[anomaly_scores == -1]
 
-#     # Plotting
-#     plt.figure(figsize=(8, 6))
-#     plt.scatter(inliers.index, inliers[feature], c='blue', label='Inliers', s=20)
-#     plt.scatter(outliers.index, outliers[feature], c='red', label='Outliers', s=20)
-#     plt.axhline(0, color='black', linewidth=1, linestyle='--', alpha=0.7)
-#     plt.xlabel('Time Index')
-#     plt.ylabel(x_label)
-#     plt.title(title)
-#     plt.legend()
-#     plt.show()
+    # Plotting
+    plt.figure(figsize=(8, 6))
+    plt.scatter(inliers.index, inliers[feature], c='blue', label='Inliers', s=20)
+    plt.scatter(outliers.index, outliers[feature], c='red', label='Outliers', s=20)
+    plt.axhline(0, color='black', linewidth=1, linestyle='--', alpha=0.7)
+    plt.xlabel('Time Index')
+    plt.ylabel(x_label)
+    plt.title(title)
+    plt.legend()
+    plt.show()
 
-# # Graph 1: X-axis velocity
-# plot_anomaly_detection(
-#     feature='vx',
-#     x_label='vx (m/s)',
-#     title='Isolation Forest for X-axis Velocity (vx)'
-# )
+# Graph 1: X-axis velocity
+plot_anomaly_detection(
+    feature='vx',
+    x_label='vx (m/s)',
+    title='Isolation Forest for X-axis Velocity (vx)'
+)
 
-# # Graph 2: Y-axis velocity
-# plot_anomaly_detection(
-#     feature='vy',
-#     x_label='vy (m/s)',
-#     title='Isolation Forest for Y-axis Velocity (vy)'
-# )
+# Graph 2: Y-axis velocity
+plot_anomaly_detection(
+    feature='vy',
+    x_label='vy (m/s)',
+    title='Isolation Forest for Y-axis Velocity (vy)'
+)
 
-# # Graph 3: X-axis acceleration
-# plot_anomaly_detection(
-#     feature='ax',
-#     x_label='ax (m/s²)',
-#     title='Isolation Forest for X-axis Acceleration (ax)'
-# )
+# Graph 3: X-axis acceleration
+plot_anomaly_detection(
+    feature='ax',
+    x_label='ax (m/s²)',
+    title='Isolation Forest for X-axis Acceleration (ax)'
+)
 
-# # Graph 4: Y-axis acceleration
-# plot_anomaly_detection(
-#     feature='ay',
-#     x_label='ay (m/s²)',
-#     title='Isolation Forest for Y-axis Acceleration (ay)'
-# )
+# Graph 4: Y-axis acceleration
+plot_anomaly_detection(
+    feature='ay',
+    x_label='ay (m/s²)',
+    title='Isolation Forest for Y-axis Acceleration (ay)'
+)
