@@ -41,7 +41,3 @@ This project focuses on analyzing simulated drone motion data (velocity & accele
 - Detected anomalies in **1-marker motion data** effectively.  
 - Provided clear anomaly visualizations → reducing physical test flights by **100%**.  
 - Improved stability assessment speed by **40%**.
-
----
-
-## 📂 Repository Structure
